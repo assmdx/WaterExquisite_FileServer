@@ -32,7 +32,7 @@ const init = async () => {
         {
             key: '',          // Never Share your secret key
             validate: validate,            // validate function defined above
-            verifyOptions: {algorithms: ['']}, // pick a strong algorithm
+            verifyOptions: {algorithms: ['HS256']}, // pick a strong algorithm
             urlKey: 'token'
         });
     server.auth.default('jwt');
@@ -43,6 +43,9 @@ const init = async () => {
         method: 'POST',
         path: '/add',
         config: {
+            cors:{
+                origin:['*']
+            },
             payload: {
                 output: "stream",
                 parse: true,
@@ -57,30 +60,31 @@ const init = async () => {
                 let failresult = [];
 
                 //判断是单个文件上传还是多个文件上传
+                console.log(request.payload["file"]);
                 if (request.payload["file"] instanceof Array) {
                     let namei;
                     for (let i = 0; i < request.payload["file"].length; i++) {
-                        let valiateNamei = await server.methods.valiateFiletype(request.payload["file"][i].hapi.filename);
+                        let valiateNamei = await server.methods.valiateFiletype(request.payload["file"][i].hapi.headers["content-type"]);
 
                         if(!valiateNamei){
                             failresult.push(request.payload["file"][i].hapi.filename);
                             continue;
                         }
                         else {
-                            namei = server.methods.makeFilename(request.payload["file"][i].hapi.filename);
+                            namei = await server.methods.makeFilename(request.payload["file"][i].hapi.filename,request.payload["file"][i].hapi.headers["content-type"]);
                             result.push(namei);
                             request.payload["file"][i].pipe(fs.createWriteStream(imagesDir + namei));
                         }
                     }
                 }
                 else {
-                    let valiateNamei = await server.methods.valiateFiletype(request.payload["file"].hapi.filename);
+                    let valiateNamei = await server.methods.valiateFiletype(request.payload["file"].hapi.headers["content-type"]);
 
                     if(!valiateNamei){
                         failresult.push(request.payload["file"].hapi.filename);
                     }
                     else {
-                        let namei = server.methods.makeFilename(request.payload["file"].hapi.filename);
+                        let namei = await server.methods.makeFilename(request.payload["file"].hapi.filename,request.payload["file"].hapi.headers["content-type"]);
                         result.push(namei);
                         request.payload["file"].pipe(fs.createWriteStream(imagesDir + namei));
                     }
@@ -100,6 +104,9 @@ const init = async () => {
         method: 'PUT',
         path: '/change',
         config: {
+            cors:{
+                origin:['*']
+            },
             payload: {
                 output: "stream",
                 parse: true,
@@ -179,17 +186,33 @@ const init = async () => {
 
 //注册函数 https://hapijs.com/tutorials/server-methods?lang=en_US
 //文件名hash
-const makeFilename = (filename) => {
+const makeFilename = async (filename,fileContentType) => {
     let index = filename.lastIndexOf(".");
     let ext = filename.substr(index);
-    return filename + '_' + Math.random().toString(36).substr(2, 9) + ext;
+    filename =  filename + '_' + Math.random().toString(36).substr(2, 9) + ext;
+
+    const schema = joi.string().regex(/[.](jpg|gif|bmg|jpeg|png)$/);
+    let isImg = await joi.validate(filename, schema).then((data)=>{
+        console.log('valiate success');
+        return true;
+    }).catch((err)=>{
+        console.log('valiate failed');
+        return false;
+    });
+    if(!isImg){
+        let typeIndex = fileContentType.lastIndexOf("/");
+        let ext = fileContentType.substr(typeIndex + 1);
+        filename = filename + '.' + ext;
+    }
+    return filename;
 };
 server.method('makeFilename', makeFilename, {});
 
-
-const valiateFiletype =  async (filename) => {
-    const schema = joi.string().regex(/[.](jpg|gif|bmg|jpeg|png)$/);
-    return await joi.validate(filename, schema).then((data)=>{
+//校验上传文件的格式
+const valiateFiletype =  async (fileContentType) => {
+    console.log(fileContentType);
+    const schema = joi.string().regex(/(image\/)(jpg|gif|bmg|jpeg|png)$/);
+    return await joi.validate(fileContentType, schema).then((data)=>{
         console.log('valiate success');
         return true;
     }).catch((err)=>{
