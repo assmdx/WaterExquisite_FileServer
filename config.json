@@ -1,0 +1,20 @@
+{
+  "port":8080,
+  "people":{
+    "id":"appmlex",
+    "name":"sizhai"
+  },
+  "jwt": {
+    "useable":true,
+    "key": "55bfh76ZkgrLZoNa405b1s4Dzv8M5wiK",
+    "algorithm": "HS256"
+  },
+  "cors":{
+    "origin":["*"]
+  },
+  "file":{
+    "dir":"E:/webApp/WaterExquisite_FileServer/images/",
+    "maxBytes":2000000,
+    "type":"jpg|gif|bmg|jpeg|png"
+  }
+}

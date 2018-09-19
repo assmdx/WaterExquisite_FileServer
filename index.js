@@ -4,19 +4,27 @@ const hapi = require('hapi');
 const joi = require('joi');
 const fs = require("fs");
 const path = require('path');
+
+const config = require('./config.json');
+
 //存储图片的文件
-const imagesDir = path.join(__dirname, 'images/');
+//const imagesDir = path.join(__dirname, 'images/');
+const imagesDir = config.file.dir;
 
 const server = hapi.server({
     host: 'localhost',
-    port: 8080
+    port: config.port
 });
 
 //use jwt in hapi.js https://github.com/dwyl/hapi-auth-jwt2
 const people = {
-
+    appmlex: {
+        id: config.people.id,
+        name: config.people.name
+    }
 };
 
+//validate user
 const validate = async function (decoded, request) {
     if (!people[decoded.id]) {
         return {isValid: false};
@@ -27,15 +35,18 @@ const validate = async function (decoded, request) {
 };
 
 const init = async () => {
-    await server.register(require('hapi-auth-jwt2'));
-    server.auth.strategy('jwt', 'jwt',
-        {
-            key: '',          // Never Share your secret key
-            validate: validate,            // validate function defined above
-            verifyOptions: {algorithms: ['HS256']}, // pick a strong algorithm
-            urlKey: 'token'
-        });
-    server.auth.default('jwt');
+    if(config.jwt.useable){
+        await server.register(require('hapi-auth-jwt2'));
+        server.auth.strategy('jwt', 'jwt',
+            {
+                key: config.jwt.key,          // Never Share your secret key
+                validate: validate,            // validate function defined above
+                verifyOptions: {algorithms: [config.jwt.algorithm]}, // pick a strong algorithm
+                urlKey: 'token'
+            });
+        server.auth.default('jwt');
+    }
+
 
     // upload file in hapi.js https://www.thepolyglotdeveloper.com/2017/11/process-file-uploads-nodejs-hapi-framework/
     //上传文件
@@ -44,15 +55,15 @@ const init = async () => {
         path: '/add',
         config: {
             cors:{
-                origin:['*']
+                origin:config.cors.origin
             },
             payload: {
                 output: "stream",
                 parse: true,
                 allow: "multipart/form-data",
-                maxBytes: 2 * 1000 * 1000
+                maxBytes: config.file.maxBytes
             },
-            auth: 'jwt'
+            auth: (config.jwt.useable ? 'jwt' : null)
         },
         handler: async function (request, response) {
             try {
@@ -105,15 +116,15 @@ const init = async () => {
         path: '/change',
         config: {
             cors:{
-                origin:['*']
+                origin:config.cors.origin
             },
             payload: {
                 output: "stream",
                 parse: true,
                 allow: "multipart/form-data",
-                maxBytes: 2 * 1000 * 1000
+                maxBytes: config.file.maxBytes
             },
-            auth: 'jwt'
+            auth: (config.jwt.useable ? 'jwt' : null)
         },
         handler: function (request, response) {
             try {

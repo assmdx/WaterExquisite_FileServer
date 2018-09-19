@@ -7,12 +7,32 @@
     git clone https://github.com/assmdx/WaterExquisite_FileServer.git
 ## 安装依赖
     npm i
-## 配置服务器验证信息
-> index.js 
-- line 12 people
-- line 33 key
-- line 35 algorithm
->reference https://github.com/dwyl/hapi-auth-jwt2
+## 配置服务器信息(config.json)
+```
+{ 
+  "port":8080, //服务器端口
+  "people":{
+    "id":"appmlex", //服务器id 参考： https://github.com/dwyl/hapi-auth-jwt2
+    "name":"sizhai" //服务器用户name
+  },
+  "jwt": { 
+    "useable":true, //是否启动jwt
+    "key": "55bfh76ZkgrLZoNa405b1s4Dzv8M5wiK", //参考 https://github.com/dwyl/hapi-auth-jwt2
+    "algorithm": "HS256" //jwt使用的算法
+  },
+  "cors":{
+    "origin":["*"] //允许跨域访问的白名单
+  },
+  "file":{
+    "dir":"E:/webApp/WaterExquisite_FileServer/images/", //文件的默认存放位置
+    "maxBytes":2000000, //文件最大大小
+    "type":"jpg|gif|bmg|jpeg|png" //允许上传的文件类型
+  }
+}
+```
+
+
+
 ## 运行
     node index
 ## 调用方式
