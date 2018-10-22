@@ -32,7 +32,7 @@
 ```
 ## 获取token
 将token中的id和name更换为config.json中的文件,运行
-node generate_token.js即可
+```node generate_token.js```即可
 
 ## 运行
     node index
