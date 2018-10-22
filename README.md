@@ -9,13 +9,13 @@
     npm i
 ## 配置服务器信息(config.json)
 ```
-{ 
+{
   "port":8080, //服务器端口
   "people":{
     "id":"appmlex", //服务器id 参考： https://github.com/dwyl/hapi-auth-jwt2
     "name":"sizhai" //服务器用户name
   },
-  "jwt": { 
+  "jwt": {
     "useable":true, //是否启动jwt
     "key": "55bfh76ZkgrLZoNa405b1s4Dzv8M5wiK", //参考 https://github.com/dwyl/hapi-auth-jwt2
     "algorithm": "HS256" //jwt使用的算法
@@ -30,8 +30,9 @@
   }
 }
 ```
-
-
+## 获取token
+将token中的id和name更换为config.json中的文件,运行
+node generate_token.js即可
 
 ## 运行
     node index
